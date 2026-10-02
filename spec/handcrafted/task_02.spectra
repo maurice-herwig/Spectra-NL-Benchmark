@@ -1,0 +1,12 @@
+spec SmartDoorLock
+
+env boolean personDetected;
+env boolean badgeValid;
+env boolean doorClosed;
+env boolean emergencyUnlock;
+
+sys boolean doorUnlocked;
+sys boolean alarm;
+
+gar alw doorUnlocked <-> (emergencyUnlock | (personDetected & badgeValid));
+gar alw alarm <-> (!emergencyUnlock & personDetected & !badgeValid);

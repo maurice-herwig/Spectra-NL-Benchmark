@@ -1,0 +1,43 @@
+spec pitch_clock
+
+env boolean runnerOnBase;
+env boolean newBatter;
+env boolean pitcherReady;
+env boolean batterReady;
+env boolean pitchStarted;
+env boolean ballInPlay;
+env boolean timeout;
+env boolean disengagement;
+
+sys Int(0..30) pitchClock;
+sys boolean pitcherViolation;
+sys boolean batterViolation;
+
+
+asm alw !(newBatter & timeout);
+asm alw !(newBatter & ballInPlay);
+asm alw !(newBatter & pitchStarted);
+asm alw !(newBatter & disengagement);
+asm alw !(timeout & ballInPlay);
+asm alw !(timeout & pitchStarted);
+asm alw !(timeout & disengagement);
+asm alw !(ballInPlay & pitchStarted);
+asm alw !(ballInPlay & disengagement);
+asm alw !(pitchStarted & disengagement);
+
+gar ini pitchClock = 30 & !pitcherViolation & !batterViolation;
+gar G (newBatter -> (next(pitchClock) = 30 & !next(pitcherViolation) & !next(batterViolation)));
+gar G (timeout -> (next(pitchClock) = pitchClock & !next(pitcherViolation) & !next(batterViolation)));
+gar G (ballInPlay -> (next(pitchClock) = pitchClock & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((pitchStarted & runnerOnBase) -> (next(pitchClock) = 18 & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((pitchStarted & !runnerOnBase) -> (next(pitchClock) = 15 & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((disengagement & runnerOnBase) -> (next(pitchClock) = 18 & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((disengagement & !runnerOnBase) -> (next(pitchClock) = 15 & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((!newBatter & !timeout & !ballInPlay & !pitchStarted & !disengagement & pitchClock = 8 & !batterReady) ->
+  (next(pitchClock) = pitchClock & !next(pitcherViolation) & next(batterViolation)));
+gar G ((!newBatter & !timeout & !ballInPlay & !pitchStarted & !disengagement & pitchClock = 0) ->
+  (next(pitchClock) = 0 & next(pitcherViolation) & !next(batterViolation)));
+gar G ((!newBatter & !timeout & !ballInPlay & !pitchStarted & !disengagement & !(pitchClock = 8 & !batterReady) & !(pitchClock = 0) & pitcherReady) ->
+  (next(pitchClock) = pitchClock - 1 & !next(pitcherViolation) & !next(batterViolation)));
+gar G ((!newBatter & !timeout & !ballInPlay & !pitchStarted & !disengagement & !(pitchClock = 8 & !batterReady) & !(pitchClock = 0) & !pitcherReady) ->
+  (next(pitchClock) = pitchClock & !next(pitcherViolation) & !next(batterViolation)));

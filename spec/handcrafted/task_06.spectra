@@ -1,0 +1,25 @@
+spec SkiLiftEntry
+
+type LiftSpeed = {OFF, SLOW, FAST};
+
+env boolean sensor20cm;
+env boolean sensor130cm;
+env boolean entryOccupied;
+env boolean chairApproaching;
+env boolean emergencyStop;
+
+sys boolean gatesOpen;
+sys LiftSpeed liftSpeed;
+
+gar G emergencyStop -> next(liftSpeed) = OFF;
+gar G emergencyStop -> (next(gatesOpen) <-> gatesOpen);
+gar G (!emergencyStop & entryOccupied) -> !next(gatesOpen);
+gar G (!emergencyStop & entryOccupied) -> next(liftSpeed) = SLOW;
+gar G (!emergencyStop & !entryOccupied & !chairApproaching) -> !next(gatesOpen);
+gar G (!emergencyStop & !entryOccupied & !chairApproaching) -> next(liftSpeed) = SLOW;
+gar G (!emergencyStop & !entryOccupied & chairApproaching & sensor20cm & sensor130cm) -> next(gatesOpen);
+gar G (!emergencyStop & !entryOccupied & chairApproaching & sensor20cm & sensor130cm) -> next(liftSpeed) = FAST;
+gar G (!emergencyStop & !entryOccupied & chairApproaching & sensor20cm & !sensor130cm) -> next(gatesOpen);
+gar G (!emergencyStop & !entryOccupied & chairApproaching & sensor20cm & !sensor130cm) -> next(liftSpeed) = SLOW;
+gar G (!emergencyStop & !entryOccupied & chairApproaching & !sensor20cm) -> !next(gatesOpen);
+gar G (!emergencyStop & !entryOccupied & chairApproaching & !sensor20cm) -> next(liftSpeed) = SLOW;

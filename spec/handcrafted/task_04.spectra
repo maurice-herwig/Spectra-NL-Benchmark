@@ -1,0 +1,20 @@
+spec RestaurantTableAssignment
+
+type Decision = {NONE, SEAT, WAIT, DECLINE};
+
+env boolean groupArrives;
+env boolean reservation;
+env boolean tableAvailable;
+env boolean kitchenOpen;
+env boolean groupTooLarge;
+
+sys Decision decision;
+
+asm GF groupArrives;
+asm GF tableAvailable;
+gar alw (!groupArrives -> decision = NONE);
+gar alw ((groupArrives & !kitchenOpen) -> decision = DECLINE);
+gar alw ((groupArrives & kitchenOpen & groupTooLarge) -> decision = DECLINE);
+gar alw ((groupArrives & kitchenOpen & !groupTooLarge & tableAvailable) -> decision = SEAT);
+gar alw ((groupArrives & kitchenOpen & !groupTooLarge & !tableAvailable & reservation) -> decision = WAIT);
+gar alw ((groupArrives & kitchenOpen & !groupTooLarge & !tableAvailable & !reservation) -> decision = DECLINE);

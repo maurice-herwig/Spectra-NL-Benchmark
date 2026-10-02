@@ -1,0 +1,26 @@
+spec VacuumCleaner
+
+env boolean batteryOk;
+env boolean freshWaterFull;
+env boolean dirtyWaterFull;
+env boolean dustBagFull;
+env boolean cleanRequest;
+
+sys boolean vacuum;
+sys boolean mop;
+
+define specialMopCondition := cleanRequest & batteryOk & !freshWaterFull & !dirtyWaterFull;
+
+gar ini (specialMopCondition -> mop);
+
+gar G (!cleanRequest -> (!vacuum & !mop));
+gar G (!batteryOk -> (!vacuum & !mop));
+gar G ((cleanRequest & batteryOk & !dustBagFull & freshWaterFull & !dirtyWaterFull) -> (vacuum & mop));
+gar G ((cleanRequest & batteryOk & dustBagFull & freshWaterFull & !dirtyWaterFull) -> (!vacuum & mop));
+gar G ((cleanRequest & batteryOk & !dustBagFull & freshWaterFull & dirtyWaterFull) -> (vacuum & !mop));
+gar G ((cleanRequest & batteryOk & dustBagFull & freshWaterFull & dirtyWaterFull) -> (!vacuum & !mop));
+gar G ((cleanRequest & batteryOk & !dustBagFull & !freshWaterFull & dirtyWaterFull) -> (vacuum & !mop));
+gar G ((cleanRequest & batteryOk & dustBagFull & !freshWaterFull & dirtyWaterFull) -> (!vacuum & !mop));
+
+gar G ((!specialMopCondition & next(specialMopCondition)) -> next(mop));
+gar G ((specialMopCondition & next(specialMopCondition)) -> !next(mop));

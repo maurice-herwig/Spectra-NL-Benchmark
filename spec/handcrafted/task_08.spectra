@@ -1,0 +1,44 @@
+spec SelfCheckoutAssistance
+
+env boolean[5] helpRequest;
+env boolean[5] ageCheck;
+env boolean employeeAvailable;
+
+sys boolean[5] assist;
+
+asm G (assist[0] -> next(!helpRequest[0]));
+asm G (assist[1] -> next(!helpRequest[1]));
+asm G (assist[2] -> next(!helpRequest[2]));
+asm G (assist[3] -> next(!helpRequest[3]));
+asm G (assist[4] -> next(!helpRequest[4]));
+
+gar G (!employeeAvailable -> (!assist[0] & !assist[1] & !assist[2] & !assist[3] & !assist[4]));
+
+gar G !(assist[0] & assist[1]);
+gar G !(assist[0] & assist[2]);
+gar G !(assist[0] & assist[3]);
+gar G !(assist[0] & assist[4]);
+gar G !(assist[1] & assist[2]);
+gar G !(assist[1] & assist[3]);
+gar G !(assist[1] & assist[4]);
+gar G !(assist[2] & assist[3]);
+gar G !(assist[2] & assist[4]);
+gar G !(assist[3] & assist[4]);
+
+gar G (assist[0] -> helpRequest[0]);
+gar G (assist[1] -> helpRequest[1]);
+gar G (assist[2] -> helpRequest[2]);
+gar G (assist[3] -> helpRequest[3]);
+gar G (assist[4] -> helpRequest[4]);
+
+gar G ((employeeAvailable &
+      ((helpRequest[0] & ageCheck[0]) |
+       (helpRequest[1] & ageCheck[1]) |
+       (helpRequest[2] & ageCheck[2]) |
+       (helpRequest[3] & ageCheck[3]) |
+       (helpRequest[4] & ageCheck[4]))) ->
+     ((assist[0] & ageCheck[0]) |
+      (assist[1] & ageCheck[1]) |
+      (assist[2] & ageCheck[2]) |
+      (assist[3] & ageCheck[3]) |
+      (assist[4] & ageCheck[4])));

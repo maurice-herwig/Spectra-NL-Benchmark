@@ -1,0 +1,15 @@
+spec LibraryQuietZone
+
+type AudioOutput = {SPEAKER, HEADPHONES, MUTED};
+
+env boolean inQuietZone;
+env boolean headphonesConnected;
+env boolean musicPlaying;
+
+sys AudioOutput audioOutput;
+
+gar always (!musicPlaying -> audioOutput = MUTED);
+gar always (inQuietZone -> audioOutput != SPEAKER);
+gar always ((inQuietZone & musicPlaying & headphonesConnected) -> audioOutput = HEADPHONES);
+gar always ((inQuietZone & musicPlaying & !headphonesConnected) -> audioOutput = MUTED);
+gar always ((!inQuietZone & musicPlaying) -> audioOutput = SPEAKER);

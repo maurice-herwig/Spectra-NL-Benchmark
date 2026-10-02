@@ -1,0 +1,38 @@
+spec BalconyPowerPlant
+
+type StorageLevel = {LOW, MEDIUM, HIGH};
+
+env boolean stormNow;
+env boolean stormSoon;
+env boolean coldNow;
+env boolean coldFrontSoon;
+env StorageLevel storageLevel;
+env boolean priceLow;
+
+sys boolean solarOn;
+sys boolean drawFromGrid;
+sys boolean heatPumpOn;
+
+asm asm_1:
+  GF stormNow;
+
+asm asm_2:
+  GF coldNow;
+
+asm asm_3:
+  GF (!stormNow & !stormSoon & !coldNow & !coldFrontSoon);
+
+asm asm_4:
+  GF (storageLevel = MEDIUM);
+
+gar gar_1:
+  G (solarOn <-> !stormNow);
+
+gar gar_2:
+  G (heatPumpOn <-> coldNow);
+
+gar G (drawFromGrid <->
+    ((storageLevel = LOW & stormNow & heatPumpOn) |
+     (storageLevel = LOW & stormNow & coldFrontSoon) |
+     ((stormSoon | coldFrontSoon) & storageLevel != HIGH & priceLow) |
+     (storageLevel = LOW & priceLow)));

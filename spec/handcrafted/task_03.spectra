@@ -1,0 +1,15 @@
+spec RailroadCrossing
+
+env boolean carOnCrossing;
+env boolean trainApproaching;
+env boolean trainPassed;
+
+sys boolean barrierClosed;
+sys boolean trainStopSignal;
+
+gar always (carOnCrossing -> !barrierClosed);
+gar always (carOnCrossing -> trainStopSignal);
+gar always ((!carOnCrossing & trainApproaching) -> barrierClosed);
+gar always ((!carOnCrossing & trainApproaching) -> !trainStopSignal);
+gar always ((!carOnCrossing & !trainApproaching & trainPassed) -> !barrierClosed);
+gar always ((!carOnCrossing & !trainApproaching & trainPassed) -> trainStopSignal);

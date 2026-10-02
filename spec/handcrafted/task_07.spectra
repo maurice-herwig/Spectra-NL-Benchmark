@@ -1,0 +1,47 @@
+spec CoffeeMachine
+
+type MachineState = {OFF, READY, NEEDS_CLEANING, CLEANING_TO_READY, CLEANING_TO_OFF, MAKING_COFFEE, COFFEE_PENDING};
+
+env boolean waterFull;
+env boolean dripTrayEmpty;
+env boolean beansFull;
+env boolean powerButton;
+env boolean coffeeButton;
+
+sys MachineState machineState;
+sys boolean statusLight;
+
+gar
+  machineState = OFF & !statusLight;
+
+gar always statusLight <->
+    ((machineState = NEEDS_CLEANING & (!waterFull | !dripTrayEmpty)) |
+     (machineState = READY &
+       ((powerButton & (!waterFull | !dripTrayEmpty)) |
+        (coffeeButton & (!waterFull | !beansFull)))) |
+     (machineState = COFFEE_PENDING & (!waterFull | !beansFull)));
+
+gar G machineState = OFF ->
+    (powerButton -> next(machineState) = NEEDS_CLEANING) &
+    (!powerButton -> next(machineState) = OFF);
+
+gar G machineState = NEEDS_CLEANING ->
+    ((waterFull & dripTrayEmpty) -> next(machineState) = CLEANING_TO_READY) &
+    ((!waterFull | !dripTrayEmpty) -> next(machineState) = NEEDS_CLEANING);
+
+gar G machineState = CLEANING_TO_READY -> next(machineState) = READY;
+
+gar G machineState = READY ->
+    ((powerButton & waterFull & dripTrayEmpty) -> next(machineState) = CLEANING_TO_OFF) &
+    ((powerButton & (!waterFull | !dripTrayEmpty)) -> next(machineState) = READY) &
+    ((!powerButton & coffeeButton & waterFull & beansFull) -> next(machineState) = MAKING_COFFEE) &
+    ((!powerButton & coffeeButton & (!waterFull | !beansFull)) -> next(machineState) = COFFEE_PENDING) &
+    ((!powerButton & !coffeeButton) -> next(machineState) = READY);
+
+gar G machineState = CLEANING_TO_OFF -> next(machineState) = OFF;
+
+gar G machineState = MAKING_COFFEE -> next(machineState) = READY;
+
+gar G machineState = COFFEE_PENDING ->
+    ((waterFull & beansFull) -> next(machineState) = MAKING_COFFEE) &
+    ((!waterFull | !beansFull) -> next(machineState) = COFFEE_PENDING);

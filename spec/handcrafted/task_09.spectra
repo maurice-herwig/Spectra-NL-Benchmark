@@ -1,0 +1,50 @@
+spec EScooterRental
+
+type BatteryLevel = {LOW, MEDIUM, HIGH};
+type ScooterState = {FREE, RESERVED, RIDING, CHARGING};
+
+env boolean reservationRequest;
+env boolean riding;
+env boolean chargingStarted;
+env BatteryLevel batteryLevel;
+
+sys ScooterState scooterState;
+sys boolean availableForRental;
+sys boolean notifyCenter;
+
+asm
+  GF chargingStarted;
+
+asm
+  GF (chargingStarted & batteryLevel = HIGH);
+
+gar scooterState = FREE;
+gar availableForRental <-> (scooterState = FREE & batteryLevel != LOW);
+gar notifyCenter <-> batteryLevel = LOW;
+
+gar G (
+    (chargingStarted -> next(scooterState) = CHARGING)
+    & (!chargingStarted & scooterState = FREE & reservationRequest & batteryLevel != LOW
+       -> next(scooterState) = RESERVED)
+    & (!chargingStarted & scooterState = FREE & !(reservationRequest & batteryLevel != LOW)
+       -> next(scooterState) = FREE)
+    & (!chargingStarted & scooterState = RESERVED & riding
+       -> next(scooterState) = RIDING)
+    & (!chargingStarted & scooterState = RESERVED & !riding
+       -> next(scooterState) = RESERVED)
+    & (!chargingStarted & scooterState = RIDING & !riding
+       -> next(scooterState) = FREE)
+    & (!chargingStarted & scooterState = RIDING & riding
+       -> next(scooterState) = RIDING)
+    & (!chargingStarted & scooterState = CHARGING & batteryLevel = HIGH
+       -> next(scooterState) = FREE)
+    & (!chargingStarted & scooterState = CHARGING & batteryLevel != HIGH
+       -> next(scooterState) = CHARGING)
+  );
+
+gar G (next(availableForRental) <-> (next(scooterState) = FREE & next(batteryLevel) != LOW));
+
+gar G (next(notifyCenter)
+     <-> (scooterState != CHARGING & next(scooterState) != CHARGING
+          & (next(batteryLevel) = LOW
+             | (batteryLevel = HIGH & next(batteryLevel) = MEDIUM))));

@@ -1,0 +1,41 @@
+spec BasketballShotClock
+
+env boolean ctrl;
+env boolean newCtrl;
+env boolean sameCtrl;
+env boolean ring;
+env boolean stop;
+env boolean def;
+env boolean off;
+env boolean front;
+env boolean back;
+
+sys Int(0..24) shotClock;
+
+asm
+  !(front & back);
+asm
+  G !(next(front) & next(back));
+asm
+  !(newCtrl & sameCtrl);
+asm
+  G !(next(newCtrl) & next(sameCtrl));
+asm
+  !(def & off);
+asm
+  G !(next(def) & next(off));
+
+gar shotClock = 24;
+
+gar G (stop & def & back -> next(shotClock) = 24);
+gar G (stop & def & front & shotClock <= 13 -> next(shotClock) = 14);
+gar G (stop & def & front & shotClock >= 14 -> next(shotClock) = shotClock);
+gar G (stop & off & back -> next(shotClock) = 24);
+gar G (stop & off & front -> next(shotClock) = 14);
+gar G (stop & !(def & (front | back)) & !(off & (front | back)) -> next(shotClock) = shotClock);
+gar G (!stop & ring & newCtrl -> next(shotClock) = 24);
+gar G (!stop & ring & !newCtrl & sameCtrl -> next(shotClock) = 14);
+gar G (!stop & !(ring & sameCtrl) & newCtrl -> next(shotClock) = 24);
+gar G (!stop & !newCtrl & !(ring & sameCtrl) & ctrl & shotClock > 0 -> next(shotClock) = shotClock - 1);
+gar G (!stop & !newCtrl & !(ring & sameCtrl) & ctrl & shotClock = 0 -> next(shotClock) = 0);
+gar G (!stop & !newCtrl & !(ring & sameCtrl) & !ctrl -> next(shotClock) = shotClock);
